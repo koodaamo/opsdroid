@@ -165,13 +165,13 @@ class OpsDroid():
 
         for connector in self.connectors:
             _LOGGER.info(_("Stopping connector %s..."), connector.name)
-            await connector.disconnect(self)
+            await connector.disconnect()
             self.connectors.remove(connector)
             _LOGGER.info(_("Stopped connector %s"), connector.name)
 
         for database in self.memory.databases:
             _LOGGER.info(_("Stopping database %s..."), database.name)
-            await database.disconnect(self)
+            await database.disconnect()
             self.memory.databases.remove(database)
             _LOGGER.info(_("Stopped database %s"), database.name)
 
@@ -237,17 +237,17 @@ class OpsDroid():
                 if isinstance(cls, type) and \
                    issubclass(cls, Connector) and\
                    cls is not Connector:
-                    connector = cls(connector_module["config"])
+                    connector = cls(connector_module["config"], self)
                     self.connectors.append(connector)
 
         if connectors:
             for connector in self.connectors:
                 if self.eventloop.is_running():
-                    self.eventloop.create_task(connector.connect(self))
+                    self.eventloop.create_task(connector.connect())
                 else:
-                    self.eventloop.run_until_complete(connector.connect(self))
+                    self.eventloop.run_until_complete(connector.connect())
             for connector in self.connectors:
-                task = self.eventloop.create_task(connector.listen(self))
+                task = self.eventloop.create_task(connector.listen())
                 self.connector_tasks.append(task)
         else:
             self.critical("All connectors failed to load", 1)
